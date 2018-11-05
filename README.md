@@ -1,34 +1,38 @@
-# RAMP starting kit on Mars craters detection and classification
+### MC Detection
 
-[![Build Status](https://travis-ci.org/ramp-kits/mars_craters.svg?branch=master)](https://travis-ci.org/ramp-kits/mars_craters)
+#### Approaches taken
 
-_Authors: Joris van den Bossche, Alexandre Boucaud, Frédéric Schmidt & Anthony Lagain_
+* Use Deep Net + Transfer Learning: As indicated in the guide notebook, 3 promising 
+network architectures are:
+1. Faster RCNN (read the paper [here]())
+2. SSD (Single Shot MultiBox Detector, [paper](https://arxiv.org/abs/1512.02325))
+3. YOLO (You Only Look Once, [paper](https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Redmon_You_Only_Look_CVPR_2016_paper.pdf))
 
-Impact craters in planetary science are used to date and characterize planetary surfaces and study the geological history of planets. It is therefore an important task which traditionally has been achieved by means of visual inspection of images. The enormous number of craters, however, makes visual counting impractical. The challenge in this RAMP is to design an algorithm to automatically detect crater position and size based on satellite images.
-
-#### Set up
-
-Open a terminal and
-
-1. install the `ramp-workflow` library (if not already done)
-  ```
-  $ pip install git+https://github.com/paris-saclay-cds/ramp-workflow.git
-  ```
-  
-2. Follow the ramp-kits instructions from the [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki/Getting-started-with-a-ramp-kit)
-
-#### Local notebook
-
-Get started on this RAMP with the [dedicated notebook](mars_craters_starting_kit.ipynb).
-
-#### Amazon Machine Image (AMI)
+Among these three, _Google_ has actually implemented the first two archis and train them with
+different popular datasets (COCO and ImageNet). More info should be read at [Google Object
+Detection API](https://github.com/tensorflow/models/tree/master/research/object_detection).
+So, the idea is taking advantages of these pretrained model (as these are trained with a large 
+amount of data and for diversified classes of objects, they would clearly contain
+more information than networks trained for limited dataset and a sole class like our case)
+ by creating our model on top of these, fine-tuning it with our data (which is basically the
+ idea of transfer learning).
  
-We have built an AMI on the [Oregon site of AWS](https://us-west-2.console.aws.amazon.com). You can sign up and launch an instance following [this blog post](https://hackernoon.com/keras-with-gpu-on-amazon-ec2-a-step-by-step-instruction-4f90364e49ac). When asked for the AMI, search for `mars_craters_2_users`. Both `ramp-workflow` and this kit are pre-installed, along with the most popular deep learning libraries. We will use `p3.2xlarge` instances to train your models. They cost about 3€/hour. Alternativaly you can also use `p2.xlarge` instances which cost 1€/hour and 3-4x slower than `p3.2xlarge`.
+ My work so far follows what proposed in this [tutorial](https://becominghuman.ai/tensorflow-object-detection-api-tutorial-training-and-evaluating-custom-object-detector-ed2594afcf73)
+ with some changes to adapt to our problem's requisites.
+#### What I have done so far:
 
+* Transforming original data (`npy` format) to image data (`jpeg` format) and then
+to _tensorflow_ data format (`tfrecord`). 
 
-#### Help
-Go to the `ramp-workflow` [wiki](https://github.com/paris-saclay-cds/ramp-workflow/wiki) for more help on the [RAMP](http:www.ramp.studio) ecosystem.
+* Fine-tuning `ssd-mobinet-v1-coco` and `faster-rcnn-resnet101-coco` with our data.
+The training process hasn't finished yet.
 
+#### Difficulties to be discussed
 
+1. Google's trained models are for _full-color_ dataset, ours is _grey_.
+2. Google use _bounding rectangles_ in their models, our problem asks for _circle-bounding_.
 
+More questions should be added to this list the more we proceed into the project.
 
+For now, I solved the first one by duplicating values to all three channels (_RGB_)
+and the second one by taking the tangential squares of the circles.

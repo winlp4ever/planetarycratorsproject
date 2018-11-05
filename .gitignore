@@ -20,3 +20,11 @@ dist/
 *starting_kit.html
 mnist.npz
 data/imgs
+
+data/*
+config/*
+models/*
+img/*
+submissions/*
+
+test.py
