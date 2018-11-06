@@ -10,8 +10,15 @@ import io
 import sys
 import os
 import glob
+import fnmatch
+
 #sys.path.append("/media/redlcamille/DATA/tensorflow/models/research/object_detection")
 #from object_detection.utils import dataset_util
+
+flags = tf.app.flags
+FLAGS = flags.FLAGS
+
+flags.DEFINE_string('filename', None, ".tfrecord filename")
 
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
@@ -50,6 +57,7 @@ def _to_tf_example(impath, label):
     class_texts = []
     if label.size != 0:
         for y, x, radius in label:
+            radius = radius * 1.2 # enlarger the circle so as to make the bounding properly contains the crater
             xmins.append(max(x - radius, 0.) / width)
             xmaxs.append(min(x + radius, width) / width)
             ymins.append(max(y - radius, 0.) / height)
@@ -73,22 +81,34 @@ def _to_tf_example(impath, label):
     }))
     return example
 
-if __name__ == '__main__':
-    train_filename = './data/train.tfrecord'
-    writer = tf.python_io.TFRecordWriter(train_filename)
+def main(unused_argv):
+    flags.mark_flag_as_required('filename')
 
-    train_dir = './data/train'
-    train_label = './data/labels_train.csv'
+    fpath = './data/{}.tfrecord'.format(FLAGS.filename)
+    writer = tf.python_io.TFRecordWriter(fpath)
 
-    y_train = pd.read_csv(train_label)
+    dir = './data/{}'.format(FLAGS.filename)
+    label_csv = './data/labels_{}.csv'.format(FLAGS.filename)
+    assert os.path.exists(dir), "invalid filename, you can only choose between 'train' and 'test'!"
 
-    for idx in range(9000):
-        im_path = os.path.join(train_dir, '{}.jpg'.format(idx))
+    # print nb of files ended with jpg in dir
+    nb_exs = len(fnmatch.filter(os.listdir(dir), '*.jpg'))
+    print('nb of examples: {}'.format(nb_exs))
+
+    y_train = pd.read_csv(label_csv)
+
+    print('creating {}.tfrecord file ...'.format(FLAGS.filename))
+    for idx in range(nb_exs):
+        im_path = os.path.join(dir, '{}.jpg'.format(idx))
         label = y_train[y_train['i'] == idx][['row_p', 'col_p', 'radius_p']].values
 
         tf_example = _to_tf_example(im_path, label)
-        print(idx)
+        print(idx, end='\r', flush=True)
         writer.write(tf_example.SerializeToString())
 
     writer.close()
     sys.stdout.flush()
+    print('\nDone!')
+
+if __name__ == '__main__':
+    tf.app.run()

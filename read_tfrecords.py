@@ -37,17 +37,23 @@ def parse_and_demo(session, ex_tensor):
     xmins, xmaxs, ymins, ymaxs = map(lambda arr: arr * 224, (xmins, xmaxs, ymins, ymaxs))
     fig, ax = plt.subplots(1)
     ax.imshow(im)
+    nb = 0
     if len(xmins) > 0:
         for i in range(len(xmins)):
             cter = ((xmins[i] + xmaxs[i]) / 2, (ymins[i] + ymaxs[i]) / 2)
-            r = (xmaxs[i] - xmins[i]) / 2
+            r = max((xmaxs[i] - xmins[i]) / 2, (ymaxs[i] - ymins[i]) / 2)
+            if cter[0] + r > 224 or cter[1] + r > 224:
+                nb += 1
             crater = patches.Circle(cter, r, color='r', alpha=0.5)
             ax.add_patch(crater)
             print('center {} radius {}'.format(cter, r))
     #print(zip(xmins, ymins))
-    fig.show()
-    plt.pause(30)
-
+    if nb > 0:
+        fig.show()
+        plt.pause(5)
+        plt.close()
+    else:
+        plt.close()
 
 with tf.Session() as sess:
     dataset = tf.data.TFRecordDataset([data_path]).map(decode)
@@ -61,7 +67,7 @@ with tf.Session() as sess:
     threads = tf.train.start_queue_runners(coord=coord)
     i = 0
     try:
-        while True and i < 20:
+        while True:
             i += 1
             parse_and_demo(sess, ex_tensor=ex)
     except tf.errors.OutOfRangeError:

@@ -26,5 +26,6 @@ config/*
 models/*
 img/*
 submissions/*
+.idea/*
 
 test.py

@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-#PIPELINE_CONFIG_PATH=models/config/faster_rcnn_resnet101_coco.config
-PIPELINE_CONFIG_PATH=models/config/ssd_mobilenet_v1_coco.config
-MODEL_DIR=models/
+PIPELINE_CONFIG_PATH=models/config/faster_rcnn_resnet101_coco.config
+#MODEL_DIR=models/
 NUM_TRAIN_STEPS=$1
 SAMPLE_1_OF_N_EVAL_EXAMPLES=1
 pathToObjDetec=/media/redlcamille/NewVol/studies/tensorflow/models/research/object_detection
